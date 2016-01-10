@@ -10,18 +10,19 @@ public class DataLoader : MonoBehaviour {
      * 예시 : 
      * GameObject pathManager = new GameObject("pathManager");
      * pathManager.tag = "pathManager";
-     * DataLoader.Load2Dat("Assets\\vectors.dat");
+     * DataLoader.Load2Dat("text_data\\vectors");
      */
     public static void Load2Dat(string fileName) 
     {
         string data = string.Empty;
         try {
-            data = File.ReadAllText(fileName);
+            TextAsset _txtFile = (TextAsset)Resources.Load(fileName);
+            data = _txtFile.text;
         }
         catch (Exception e) { Debug.Log(e); }
 
         // 주의: Data로 정보가 읽혀지지 않은 경우 실패함
-        if (string.IsNullOrEmpty(data))
+        if (string.IsNullOrEmpty(data) || data.CompareTo("") == 0)
             return;
 
         GameObject parentGameObject = GameObject.FindGameObjectWithTag("pathManager");
@@ -48,7 +49,7 @@ public class DataLoader : MonoBehaviour {
     /* #데이터 저장
      * 데이터를 저장하기 위해서는 데이터를 가지는 부모객체를 생성하여 설정하거나
      * TagName으로 pathManager를 가진 객체를 설정한다.
-     * 예시 : DataLoader.Save2Dat("Assets\\vectors.dat", saveParentGameObject);
+     * 예시 : DataLoader.Save2Dat("Assets\\text_data\\vectors.txt", saveParentGameObject);
      */
     public static void Save2Dat(string fileName,GameObject pGameObject)
     {
