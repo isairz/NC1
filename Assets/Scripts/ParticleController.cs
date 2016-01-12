@@ -21,7 +21,7 @@ public class ParticleController : MonoBehaviour {
 	// Update is called once per frame
 	void FixedUpdate () {
 		bool boom = Input.GetMouseButton (0);
-		Debug.Log (boom);
+		Vector3 massPoint = new Vector3();
 		foreach (Transform child in transform)
 		{
 			// child.RotateAround (transform.position, new Vector3 (0, 1f, 0), Time.deltaTime * 10f);
@@ -31,10 +31,20 @@ public class ParticleController : MonoBehaviour {
 			float dist = toCenter.magnitude;
 			/*if (dist < 0.5f)
 				return;*/
-			rig.AddForce (dir * dist * 1f, ForceMode.Acceleration);
+			rig.AddForce (dir * dist * dist, ForceMode.Acceleration);
+			massPoint += child.position;
+		}
+
+		massPoint /= transform.childCount;
+
+		foreach (Transform child in transform)
+		{
+			Rigidbody rig = child.GetComponent<Rigidbody>();
+			Vector3 toMass = (massPoint - child.position);
+			Vector3 dir = toMass.normalized;
+			float dist = toMass.magnitude;
 			if(boom){
-				rig.AddForce (-dir * 10f, ForceMode.Acceleration);
-				// rig.AddExplosionForce(100f * Time.deltaTime, transform.position, 100f);
+				rig.AddForce (-dir * dist * 10f, ForceMode.Acceleration);
 			}
 		}
 	}
