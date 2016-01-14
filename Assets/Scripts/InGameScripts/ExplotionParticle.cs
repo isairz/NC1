@@ -3,12 +3,12 @@ using System.Collections;
 
 public class ExplotionParticle : MonoBehaviour
 {
-    public enum explotionName { cube = 0, sphere = 1 }
+    public enum explotionName { cube = 0, sphere = 1, _default = 2}
     // particle_number
     public int particle_num = 8;
     public float exlpotion_speed = 100f;
     public explotionName particle_name;
-
+    public GameObject originalParticle = null;
     // force(intType)
     public int trigger_force = 9;
     // 
@@ -27,7 +27,7 @@ public class ExplotionParticle : MonoBehaviour
         // number(parameter)
         GameObject[] Child_GameObjects = new GameObject[particle_num];
 
-        Vector3 newScale = transform.localScale * 0.5f;
+        Vector3 newScale = transform.localScale / particle_num;
         Bounds bounds = transform.GetComponent<Renderer>().bounds;
         Vector3 min = bounds.min, max = bounds.max;
 
@@ -44,6 +44,8 @@ public class ExplotionParticle : MonoBehaviour
                 Child_GameObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
             else if(particle_name == explotionName.sphere)
                 Child_GameObject = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            else if(particle_name == explotionName._default)
+                Child_GameObject = Instantiate(originalParticle);
 
             Child_GameObject.transform.parent = transform;
             Child_GameObject.transform.position = newPosition;
