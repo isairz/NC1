@@ -3,10 +3,11 @@ using System.Collections;
 using System.Collections.Generic;
 
 public class ParticleController : MonoBehaviour {
-
-	public new Transform transform;
+	
 	public Transform particleBase;
 	public int particles = 10;
+
+    protected new Transform transform;
 
 	// Use this for initialization
 	void Awake () {
@@ -20,7 +21,7 @@ public class ParticleController : MonoBehaviour {
 	
 	// Update is called once per frame
 	void FixedUpdate () {
-		bool boom = Input.GetMouseButton (0);
+		bool boom = !Input.GetMouseButton (0);
 		Vector3 massPoint = new Vector3();
 		foreach (Transform child in transform)
 		{
