@@ -2,9 +2,8 @@
 using System.Collections;
 using UnityEngine.UI;
 
-public class SceneManager : MonoBehaviour {
+public class TitleSceneManager : MonoBehaviour{
 
-    public GameObject Canavas;
     public Image Character_img;
     public Image BG_img;
     
@@ -18,19 +17,19 @@ public class SceneManager : MonoBehaviour {
    
     private float _animation_fps;
 
-    private Rect _canvas_bound;
     private Transform _character_transform;
-    private Vector3 _range;
+    private Vector3 _src_position, _des_position;
     private float _button_color_speed = -1.5f;
     void Awake() 
     {
         _Button_img = GameObject.FindGameObjectWithTag("Button").GetComponent<Image>();
         _animation_fps = animation_time / BG_imgs.Length;
-        _canvas_bound = Canavas.GetComponent<Canvas>().pixelRect;
+        
         _character_transform = Character_img.GetComponent<Transform>();
-        _range = new Vector3(Random.Range(0f, 1f), Random.Range(0f, 1f), 0f);
-        _range.Normalize();
+        _src_position = _character_transform.localPosition;
+        _des_position = _src_position + new Vector3(60f, 24f, 0f);
     }
+    float timer = 0f;
     void Update()
     {
         /// BG Animation
@@ -55,15 +54,26 @@ public class SceneManager : MonoBehaviour {
         _Button_img.color = c;
         /// END
         /// Chracter Move
-        if (_canvas_bound.xMin >= _character_transform.position.x
-                || _canvas_bound.xMax <= _character_transform.position.x)
-            _range.x *= -1f;
-        if (_canvas_bound.yMin >= _character_transform.position.y
-            || _canvas_bound.yMax <= _character_transform.position.y)
-            _range.y *= -1f;
-        // speed
-        float character_speed = 20f;
-        _character_transform.Translate(_range * character_speed * Time.deltaTime);
+        if (Vector3.Distance(_des_position, _character_transform.localPosition) < 0.1f)
+        { 
+            //swap Vector3
+            Vector3 temp = _src_position;
+            _src_position = _des_position;
+            _des_position = temp;
+            timer = 0f;
+        }
+        float character_speed = 0.01f;
+        _character_transform.localPosition = Vector3.Lerp(_character_transform.localPosition, _des_position, timer);
+        if (_des_position == _character_transform.localPosition)
+        {
+            // Go to position1 t = 0.0f
+            timer = Mathf.Clamp(timer - Time.deltaTime * character_speed, 0.0f, 1.0f);
+        }
+        else
+        {
+            // Go to position2 t = 1.0f
+            timer = Mathf.Clamp(timer + Time.deltaTime * character_speed, 0.0f, 1.0f);
+        }
         /// END
     }
     public void Button_Touch_Event() 
