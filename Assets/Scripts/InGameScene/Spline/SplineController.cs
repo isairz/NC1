@@ -26,18 +26,27 @@ public class SplineController : MonoBehaviour
 		if (trans.Length < 2)
 			return;
 
-		SplineInterpolator interp = GetComponent(typeof(SplineInterpolator)) as SplineInterpolator;
-		SetupSplineInterpolator(interp, trans);
-		interp.StartInterpolation(null, false, WrapMode);
+		SplineInterpolator interp;
 
+		if (mSplineInterp) {
+			// In Playing.
+			interp = mSplineInterp;
+		} else {
+			interp = GetComponent<SplineInterpolator> ();
+			SetupSplineInterpolator(interp, trans);
+			interp.StartInterpolation(null, false, WrapMode);
+		}
 
 		Vector3 prevPos = trans[0].position;
+		for (int c = 0; c < trans.Length; c++) {
+			Gizmos.color = new Color(1, 0, 0.2f, 1);
+			Gizmos.DrawCube (trans [c].position, new Vector3(1,1,1));
+		}
 		for (int c = 1; c <= 100; c++)
 		{
 			float currTime = c * Duration / 100;
 			Vector3 currPos = interp.GetHermiteAtTime(currTime);
-			float mag = (currPos-prevPos).magnitude * 2;
-			Gizmos.color = new Color(mag, 0, 0, 1);
+			Gizmos.color = new Color(1, 0, 0, 1);
 			Gizmos.DrawLine(prevPos, currPos);
 			prevPos = currPos;
 		}
