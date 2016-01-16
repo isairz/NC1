@@ -5,26 +5,26 @@ using UnityEngine.UI;
 public class InGameSceneManager : MonoBehaviour{
 
     public GameObject[] LifeUIObjects;
-    public int LifeValue;
+    private int _lifeValue;
 
     void Awake() {
-        SetLife(3);
+        SetLife(LifeUIObjects.Length);
     }
     public void DecreaseLife() 
     {
-        --LifeValue;
+        --_lifeValue;
         UpdateLifeUI();
     }
     public void SetLife(int lifeNum)
     {
-        LifeValue = lifeNum;
+        _lifeValue = lifeNum;
         UpdateLifeUI();
     }
     private void UpdateLifeUI() 
     {
         for (int index = 0; index < LifeUIObjects.Length; index++)
         {
-            if (index < LifeValue)
+            if (index < _lifeValue)
                 LifeUIObjects[index].SetActive(true);
             else
                 LifeUIObjects[index].SetActive(false);

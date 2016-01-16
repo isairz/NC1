@@ -42,8 +42,10 @@ public class ParticleController : MonoBehaviour {
 
 		massPoint /= transform.childCount;
 
-        // massPoint > Sphere        
-        _sphereCollider.center = massPoint;
+        // massPoint > Sphere
+        // 충돌 이슈!
+        //_sphereCollider.center = massPoint;
+        //Debug.Log(_sphereCollider.transform.position);
         _particle_percentage = 0;
 
 		foreach (Transform child in transform)
@@ -63,5 +65,6 @@ public class ParticleController : MonoBehaviour {
         // num' particle > powerW
         // get percentage ( 0 ~ 1 )
         _particle_percentage = _particle_percentage / transform.childCount;
+        
 	}
 }
