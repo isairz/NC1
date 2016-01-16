@@ -47,9 +47,15 @@ public class TitleSceneManager : MonoBehaviour{
         }
         /// END
         /// Button Alpha Change
-        if(_Button_img.color.a > 1f || _Button_img.color.a < 0f)
-            _button_color_speed *= -1;
         Color c = _Button_img.color;
+        if(_Button_img.color.a > 1f){
+            _button_color_speed *= -1;
+            c.a = 1f;
+        }
+        else if (_Button_img.color.a < 0f){
+            _button_color_speed *= -1;
+            c.a = 0f;
+        }
         c.a += _button_color_speed * Time.deltaTime;
         _Button_img.color = c;
         /// END

@@ -9,6 +9,9 @@ public class ParticleController : MonoBehaviour {
 
     protected new Transform transform;
 
+    private SphereCollider _sphereCollider;
+    private float _particle_percentage;
+    public float Force { get { return _particle_percentage; } }
 	// Use this for initialization
 	void Awake () {
 		transform = GetComponent<Transform> ();
@@ -16,9 +19,10 @@ public class ParticleController : MonoBehaviour {
 			Transform newParticle = Instantiate (particleBase);
 			newParticle.position = new Vector3 (Random.Range (-2f, 2f), Random.Range (-2f, 2f), Random.Range (-2f, 2f));
 			newParticle.parent = transform;
-		}
+            // make SpereCheck Collider
+            _sphereCollider = GetComponent<SphereCollider>();
+		} 
 	}
-	
 	// Update is called once per frame
 	void FixedUpdate () {
 		bool boom = !Input.GetMouseButton (0);
@@ -38,8 +42,16 @@ public class ParticleController : MonoBehaviour {
 
 		massPoint /= transform.childCount;
 
+        // massPoint > Sphere        
+        _sphereCollider.center = massPoint;
+        _particle_percentage = 0;
+
 		foreach (Transform child in transform)
 		{
+            // boxIn childs
+            if (_sphereCollider.bounds.Contains(child.transform.position))
+                ++_particle_percentage;
+
 			Rigidbody rig = child.GetComponent<Rigidbody>();
 			Vector3 toMass = (massPoint - child.position);
 			Vector3 dir = toMass.normalized;
@@ -48,5 +60,8 @@ public class ParticleController : MonoBehaviour {
 				rig.AddForce (-dir * dist * 10f, ForceMode.Acceleration);
 			}
 		}
+        // num' particle > powerW
+        // get percentage ( 0 ~ 1 )
+        _particle_percentage = _particle_percentage / transform.childCount;
 	}
 }

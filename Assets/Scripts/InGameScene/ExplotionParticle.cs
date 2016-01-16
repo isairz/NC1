@@ -10,14 +10,16 @@ public class ExplotionParticle : MonoBehaviour
     public explotionName particle_name;
     public GameObject originalParticle = null;
     // force(intType)
-    public int trigger_force = 9;
+    public float trigger_force = 0.9f;
     // 
     public float trigger_time = 7f;
 
     private new Transform transform;
+    private InGameSceneManager _inGameSceneManagerScript;
     void Awake()
     {
         transform = GetComponent<Transform>();
+        _inGameSceneManagerScript = GameObject.FindGameObjectWithTag("GameController").GetComponent<InGameSceneManager>();
         prepareObject();
     }
     void prepareObject()
@@ -66,16 +68,19 @@ public class ExplotionParticle : MonoBehaviour
         if (other.tag.CompareTo("Player") == 0)
         {
             //get player_force(particle_num)
-            int force_power = 10;//= other.GetComponent<scriptName>().particle_num;
+            float force_power = other.GetComponent<ParticleController>().Force;
             if (force_power >= trigger_force)
             {
                 OnExplotion(other.transform.position);//onExplotion
             }
             else
             {
-                ;//notExplotion
+                //notExplotion
+                //life delete
+                _inGameSceneManagerScript.DecreaseLife();
             }
             transform.GetComponent<BoxCollider>().isTrigger = false;
+            transform.GetComponent<MeshRenderer>().enabled = false;
         }
     }
     void OnExplotion(Vector3 src_position)
@@ -91,7 +96,6 @@ public class ExplotionParticle : MonoBehaviour
                 ForceMode.Impulse);
             StartCoroutine(disapear_child(child_gameobject, trigger_time));
         }
-        transform.GetComponent<MeshRenderer>().enabled = false;
     }
      IEnumerator disapear_child(GameObject child, float limit_time)
     {
