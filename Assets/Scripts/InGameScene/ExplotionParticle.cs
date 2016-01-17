@@ -74,7 +74,7 @@ public class ExplotionParticle : MonoBehaviour
             float force_power = other.GetComponentInParent<ParticleController>().Force;
             if (force_power >= trigger_force)
             {
-                Debug.Log("Explotion :" + transform.gameObject.name);
+                //Debug.Log("Explotion :" + transform.gameObject.name);
                 //onExplotion
                 OnExplotion(other.transform.position);
                 //makeParticle
@@ -82,7 +82,7 @@ public class ExplotionParticle : MonoBehaviour
             }
             else
             {
-                Debug.Log("NotExplotion :"+transform.gameObject.name);
+                //Debug.Log("NotExplotion :"+transform.gameObject.name);
                 //notExplotion
                 //life delete
                 _inGameSceneManagerScript.DecreaseLife();

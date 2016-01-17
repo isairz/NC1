@@ -182,4 +182,15 @@ public class ParticleController : MonoBehaviour
             _particle_percentage = _particle_percentage / _particlesNumber;
         }
     }
+    public void Action(Vector3 ControllerForce)
+    {
+        foreach (Transform child in transform)
+        {
+            if (child.gameObject.activeSelf && child.gameObject.CompareTag("Living"))
+            {
+                Rigidbody rig = child.GetComponent<Rigidbody>();
+                rig.AddForce(ControllerForce * 50f, ForceMode.Impulse);
+            }
+        }
+    }
 }
