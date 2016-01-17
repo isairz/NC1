@@ -3,69 +3,192 @@ using System.Collections;
 using System.Collections.Generic;
 
 public enum eOrientationMode { NODE = 0, TANGENT }
+public enum eWrapMode { ONCE, LOOP }
+public enum eEndPointsMode { EXPLICIT, AUTO, LOOP };
 
 [AddComponentMenu("Splines/Spline Controller")]
-[RequireComponent(typeof(SplineInterpolator))]
 public class SplineController : MonoBehaviour
 {
-	public GameObject SplineRoot;
-	public float Duration = 10;
+	public string SplineName = "";
+	public Material lineMat;
+	public Transform SplineRoot;
+
+	// public List<Vector3> Nodes = new List<SplineNode> ();
+	// public List<SplineNode> Nodes = new List<SplineNode> ();
+	// public List<Vector3> Nodes = new List<Vector3>(){Vector3.zero, Vector3.zero};
+	[HideInInspector]
+	public SplineNode[] Nodes;
+	public SplineNode[] rawNodes;
 	public eOrientationMode OrientationMode = eOrientationMode.NODE;
 	public eWrapMode WrapMode = eWrapMode.ONCE;
+	public eEndPointsMode EndPointsMode = eEndPointsMode.AUTO;
 	public bool AutoStart = true;
 	public bool AutoClose = true;
-	public bool HideOnExecute = true;
 
+	[HideInInspector]
+	public bool initialized = false;
+	public string initialName = "";
+	public bool pathVisible = true;
 
-	SplineInterpolator mSplineInterp;
-	Transform[] mTransforms;
+	float mCurrentTime;
+	int mCurrentIdx = 1;
+	string mState = "";
 
-	void OnDrawGizmos()
+	void Awake()
 	{
-		Transform[] trans = GetTransforms();
-		if (trans.Length < 2)
-			return;
-
-		SplineInterpolator interp;
-
-		if (mSplineInterp) {
-			// In Playing.
-			interp = mSplineInterp;
-		} else {
-			interp = GetComponent<SplineInterpolator> ();
-			SetupSplineInterpolator(interp, trans);
-			interp.StartInterpolation(null, false, WrapMode);
-		}
-
-		Vector3 prevPos = trans[0].position;
-		for (int c = 0; c < trans.Length; c++) {
-			Gizmos.color = new Color(1, 0, 0.2f, 1);
-			Gizmos.DrawCube (trans [c].position, new Vector3(1,1,1));
-		}
-		for (int c = 1; c <= 1000; c++)
-		{
-			float currTime = c * Duration / 1000;
-			Vector3 currPos = interp.GetHermiteAtTime(currTime);
-			Gizmos.color = new Color(1, 0, 0, 1);
-			Gizmos.DrawLine(prevPos, currPos);
-			prevPos = currPos;
-		}
+		mState = "Reset";
 	}
-
 
 	void Start()
 	{
-		mSplineInterp = GetComponent(typeof(SplineInterpolator)) as SplineInterpolator;
-
-		mTransforms = GetTransforms();
-
-		if (HideOnExecute)
-			DisableTransforms();
-
-		if (AutoStart)
-			FollowSpline();
+		if (AutoStart) {
+			mState = WrapMode.ToString ();
+		}
 	}
 
+	void Update()
+	{
+		if (mState == "Reset" || mState == "Stopped" || Nodes.Length < 4)
+			return;
+
+		mCurrentTime += Time.deltaTime;
+
+		// We advance to next point in the path
+		if (mCurrentTime >= Nodes[mCurrentIdx + 1].Time)
+		{
+			if (mCurrentIdx < Nodes.Length - 3)
+			{
+				mCurrentIdx++;
+			}
+			else
+			{
+				if (mState != "Loop")
+				{
+					mState = "Stopped";
+
+					// We stop right in the end point
+					transform.position = Nodes[Nodes.Length - 2].transform.position;
+				}
+				else
+				{
+					mCurrentIdx = 1;
+					mCurrentTime = 0;
+				}
+			}
+		}
+
+		if (mState != "Stopped")
+		{
+			// Calculates the t param between 0 and 1
+			float param = (mCurrentTime - Nodes[mCurrentIdx].Time) / (Nodes[mCurrentIdx + 1].Time - Nodes[mCurrentIdx].Time);
+
+			// Smooth the param
+			//param = MathUtils.Ease(param, Nodes[mCurrentIdx].EaseIO.x, Nodes[mCurrentIdx].EaseIO.y);
+			transform.position = GetHermiteInternal(mCurrentIdx, param);
+		}
+	}
+
+	public void ReloadNodes()
+	{
+		rawNodes = SplineRoot.GetComponentsInChildren<SplineNode> ();
+		switch (EndPointsMode) {
+		case eEndPointsMode.EXPLICIT:
+			Nodes = rawNodes;
+			break;
+		case eEndPointsMode.AUTO:
+			Nodes = new SplineNode[rawNodes.Length + 2];
+			rawNodes.CopyTo (Nodes, 1);
+			Nodes [0] = rawNodes [0];
+			Nodes [Nodes.Length - 1] = rawNodes [rawNodes.Length - 1];
+			break;
+		case eEndPointsMode.LOOP:
+			Nodes = new SplineNode[rawNodes.Length + 3];
+			rawNodes.CopyTo (Nodes, 1);
+			Nodes [0] = rawNodes [rawNodes.Length - 1];
+			Nodes [Nodes.Length - 2] = rawNodes [0];
+			Nodes [Nodes.Length - 1] = rawNodes [1];
+			break;
+		} 
+	}
+
+	public Vector3 GetHermiteInternal(int idxFirstPoint, float t)
+	{
+		if (Nodes [idxFirstPoint].SplineMode == SplineNode.eSplineMode.Line) {
+			Vector3 P1 = Nodes [idxFirstPoint].position;
+			Vector3 P2 = Nodes [idxFirstPoint + 1].position;
+			return P1 * (1 - t) + P2 * t;
+		} else {
+			float t2 = t * t;
+			float t3 = t2 * t;
+
+			Vector3 P0 = Nodes [idxFirstPoint == 0 ? 0 : idxFirstPoint - 1].position;
+			Vector3 P1 = Nodes [idxFirstPoint].position;
+			Vector3 P2 = Nodes [idxFirstPoint + 1].position;
+			Vector3 P3 = Nodes [idxFirstPoint >= Nodes.Length - 2 ? idxFirstPoint + 1 : idxFirstPoint + 2].position;
+
+			float tension = 0.5f;	// 0.5 equivale a catmull-rom
+
+			Vector3 T1 = tension * (P2 - P0);
+			Vector3 T2 = tension * (P3 - P1);
+
+			float Blend1 = 2 * t3 - 3 * t2 + 1;
+			float Blend2 = -2 * t3 + 3 * t2;
+			float Blend3 = t3 - 2 * t2 + t;
+			float Blend4 = t3 - t2;
+
+			return Blend1 * P1 + Blend2 * P2 + Blend3 * T1 + Blend4 * T2;
+		}
+	}
+
+	public Vector3 GetPositionAtTime(float timeParam)
+	{
+		if (timeParam >= Nodes[Nodes.Length - 2].Time)
+			return Nodes[Nodes.Length - 2].position;
+
+		int c;
+		for (c = 1; c < Nodes.Length - 2; c++)
+		{
+			for (c = 1; c < Nodes.Length - 2; c++)
+			if (Nodes[c].Time > timeParam)
+				break;
+		}
+
+		int idx = c - 1;
+		float param = (timeParam - Nodes[idx].Time) / (Nodes[idx + 1].Time - Nodes[idx].Time);
+		param = MathUtils.Ease(param, Nodes[idx].EaseIO.x, Nodes[idx].EaseIO.y);
+
+		return GetHermiteInternal(idx, param);
+	}
+
+	void DrawSpline()
+	{
+		for(int i = 1; i < Nodes.Length - 2; i++) {
+			Vector3 prevPos = GetHermiteInternal (i, 0f);
+			for (float t = 0.1f; t < 1.01f; t+=0.1f) {
+				Vector3 pos = GetHermiteInternal (i, t);
+				GL.Begin(GL.LINES);
+				lineMat.SetPass(0);
+				GL.Color(new Color(lineMat.color.r, lineMat.color.g, lineMat.color.b, lineMat.color.a));
+				// GL.Color(SplineColor);
+				GL.Vertex(prevPos);
+				GL.Vertex(pos);
+				GL.End();
+				prevPos = pos;
+			}
+		}
+	}
+
+	// To show the lines in the game window whne it is running
+	void OnPostRender() {
+		DrawSpline();
+	}
+
+	// To show the lines in the editor
+	void OnDrawGizmos() {
+		DrawSpline();
+	}
+
+	/*
 	void SetupSplineInterpolator(SplineInterpolator interp, Transform[] trans)
 	{
 		interp.Reset();
@@ -96,52 +219,5 @@ public class SplineController : MonoBehaviour
 
 		if (AutoClose)
 			interp.SetAutoCloseMode(step * c);
-	}
-
-
-	/// <summary>
-	/// Returns children transforms, sorted by name.
-	/// </summary>
-	Transform[] GetTransforms()
-	{
-		if (SplineRoot != null)
-		{
-			List<Component> components = new List<Component>(SplineRoot.GetComponentsInChildren(typeof(Transform)));
-			List<Transform> transforms = components.ConvertAll(c => (Transform)c);
-
-			transforms.Remove(SplineRoot.transform);
-			transforms.Sort(delegate(Transform a, Transform b)
-			{
-				return a.name.CompareTo(b.name);
-			});
-
-			return transforms.ToArray();
-		}
-
-		return null;
-	}
-
-	/// <summary>
-	/// Disables the spline objects, we don't need them outside design-time.
-	/// </summary>
-	void DisableTransforms()
-	{
-		if (SplineRoot != null)
-		{
-			// SplineRoot.SetActiveRecursively(false);
-		}
-	}
-
-
-	/// <summary>
-	/// Starts the interpolation
-	/// </summary>
-	void FollowSpline()
-	{
-		if (mTransforms.Length > 0)
-		{
-			SetupSplineInterpolator(mSplineInterp, mTransforms);
-			mSplineInterp.StartInterpolation(null, true, WrapMode);
-		}
-	}
+	} */
 }
