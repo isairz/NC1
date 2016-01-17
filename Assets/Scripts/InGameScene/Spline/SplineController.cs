@@ -83,8 +83,9 @@ public class SplineController : MonoBehaviour
 			float param = (mCurrentTime - Nodes[mCurrentIdx].Time) / (Nodes[mCurrentIdx + 1].Time - Nodes[mCurrentIdx].Time);
 
 			// Smooth the param
-			//param = MathUtils.Ease(param, Nodes[mCurrentIdx].EaseIO.x, Nodes[mCurrentIdx].EaseIO.y);
+			// param = MathUtils.Ease(param, Nodes[mCurrentIdx].EaseIO.x, Nodes[mCurrentIdx].EaseIO.y);
 			transform.position = GetHermiteInternal(mCurrentIdx, param);
+			transform.rotation = GetSquad(mCurrentIdx, param);
 		}
 	}
 
@@ -112,7 +113,30 @@ public class SplineController : MonoBehaviour
 			Nodes [Nodes.Length - 2] = rawNodes [0];
 			Nodes [Nodes.Length - 1] = rawNodes [1];
 			break;
-		} 
+		}
+
+		for (int c = 1; c < Nodes.Length; c++) {
+			SplineNode node = Nodes [c];
+			SplineNode prevNode = Nodes [c - 1];
+
+			// Always interpolate using the shortest path -> Selective negation
+			if (Quaternion.Dot (node.rotation, prevNode.rotation) < 0) {
+				node.transform.rotation = new Quaternion(-node.rotation.x, -node.rotation.y, -node.rotation.z, -node.rotation.w);
+			}
+		}
+	}
+
+	Quaternion GetSquad(int idxFirstPoint, float t)
+	{
+		Quaternion Q0 = Nodes [idxFirstPoint - 1].rotation;
+		Quaternion Q1 = Nodes [idxFirstPoint].rotation;
+		Quaternion Q2 = Nodes [idxFirstPoint + 1].rotation;
+		Quaternion Q3 = Nodes [idxFirstPoint + 2].rotation;
+
+		Quaternion T1 = MathUtils.GetSquadIntermediate (Q0, Q1, Q2);
+		Quaternion T2 = MathUtils.GetSquadIntermediate (Q1, Q2, Q3);
+
+		return MathUtils.GetQuatSquad (t, Q1, Q2, T1, T2);
 	}
 
 	public Vector3 GetHermiteInternal(int idxFirstPoint, float t)
