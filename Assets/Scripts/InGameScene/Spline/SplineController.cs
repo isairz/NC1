@@ -11,7 +11,7 @@ public class SplineController : MonoBehaviour
 {
 	public string SplineName = "";
 	public Material lineMat;
-	public Transform SplineRoot;
+	public GameObject SplineRoot;
 
 	// public List<Vector3> Nodes = new List<SplineNode> ();
 	// public List<SplineNode> Nodes = new List<SplineNode> ();
@@ -90,6 +90,10 @@ public class SplineController : MonoBehaviour
 
 	public void ReloadNodes()
 	{
+		if (!SplineRoot) {
+			return;
+		}
+
 		rawNodes = SplineRoot.GetComponentsInChildren<SplineNode> ();
 		switch (EndPointsMode) {
 		case eEndPointsMode.EXPLICIT:
