@@ -162,10 +162,11 @@ public class SplineController : MonoBehaviour
 
 	void DrawSpline()
 	{
+		const int step = 100;
 		for(int i = 1; i < Nodes.Length - 2; i++) {
 			Vector3 prevPos = GetHermiteInternal (i, 0f);
-			for (float t = 0.1f; t < 1.01f; t+=0.1f) {
-				Vector3 pos = GetHermiteInternal (i, t);
+			for (float t = 0; t <= step; t++) {
+				Vector3 pos = GetHermiteInternal (i, (float)t/step);
 				GL.Begin(GL.LINES);
 				lineMat.SetPass(0);
 				GL.Color(new Color(lineMat.color.r, lineMat.color.g, lineMat.color.b, lineMat.color.a));
@@ -179,7 +180,7 @@ public class SplineController : MonoBehaviour
 	}
 
 	// To show the lines in the game window whne it is running
-	void OnPostRender() {
+	public void OnPostRender() {
 		DrawSpline();
 	}
 
