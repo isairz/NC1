@@ -8,6 +8,10 @@ public class ParticleController : MonoBehaviour
     public Transform particleBase;
     public int Maximum_particles = 40;
     public int _particlesNumber = 20;
+
+    public float collectSpeed = 1f;
+    public float spreadSpeed = 10f;
+
     protected new Transform transform;
 
     private SphereCollider _sphereCollider;
@@ -128,7 +132,7 @@ public class ParticleController : MonoBehaviour
     // Update is called once per frame
     void FixedUpdate()
     {
-        bool boom = !Input.GetMouseButton(0);
+        bool boom = Input.GetMouseButton(0);
         Vector3 massPoint = new Vector3();
 
         //int count = 0;
@@ -143,9 +147,8 @@ public class ParticleController : MonoBehaviour
                 float dist = toCenter.magnitude;
                 /*if (dist < 0.5f)
                     return;*/
-                rig.AddForce(dir * dist * dist, ForceMode.Acceleration);
+                rig.AddForce(dir * dist * dist * collectSpeed, ForceMode.Acceleration);
                 massPoint += child.position;
-                // ++count;
             }
         }
         //Debug.Log("count:" + count + "/total: " + _particlesNumber);
@@ -171,12 +174,12 @@ public class ParticleController : MonoBehaviour
                 float dist = toMass.magnitude;
                 if (boom)
                 {
-                    rig.AddForce(-dir * dist * 10f, ForceMode.Acceleration);
+                    rig.AddForce(-dir * dist * spreadSpeed, ForceMode.Acceleration);
                 }
             }
+            // num' particle > powerW
+            // get percentage ( 0 ~ 1 )
+            _particle_percentage = _particle_percentage / _particlesNumber;
         }
-        // num' particle > powerW
-        // get percentage ( 0 ~ 1 )
-        _particle_percentage = _particle_percentage / _particlesNumber;
     }
 }

@@ -42,9 +42,9 @@ public class SplineController : MonoBehaviour
 			Gizmos.color = new Color(1, 0, 0.2f, 1);
 			Gizmos.DrawCube (trans [c].position, new Vector3(1,1,1));
 		}
-		for (int c = 1; c <= 100; c++)
+		for (int c = 1; c <= 1000; c++)
 		{
-			float currTime = c * Duration / 100;
+			float currTime = c * Duration / 1000;
 			Vector3 currPos = interp.GetHermiteAtTime(currTime);
 			Gizmos.color = new Color(1, 0, 0, 1);
 			Gizmos.DrawLine(prevPos, currPos);
