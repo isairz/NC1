@@ -13,6 +13,7 @@ public class ExplotionParticle : MonoBehaviour
     private float trigger_force = 0.8f;
     // 
     public float trigger_time = 7f;
+    private bool _isCrash = false;
 
     private new Transform transform;
     private InGameSceneManager _inGameSceneManagerScript;
@@ -63,25 +64,31 @@ public class ExplotionParticle : MonoBehaviour
     }
     void OnTriggerEnter(Collider other)
     {
-        Debug.Log(other.tag);
         //enter the player
-        if (other.tag.CompareTo("Player") == 0)
+        if (other.CompareTag("Living") && !_isCrash)
         {
+            _isCrash = true;
+            transform.GetComponent<Collider>().isTrigger = false;
+
             //get player_force(particle_num)
             float force_power = other.GetComponentInParent<ParticleController>().Force;
             if (force_power >= trigger_force)
             {
-                Debug.Log("Explotion");
-                OnExplotion(other.transform.position);//onExplotion
+                Debug.Log("Explotion :" + transform.gameObject.name);
+                //onExplotion
+                OnExplotion(other.transform.position);
+                //makeParticle
+                other.GetComponentInParent<ParticleController>().AddParticle(transform.position);
             }
             else
             {
-                Debug.Log("NotExplotion");
+                Debug.Log("NotExplotion :"+transform.gameObject.name);
                 //notExplotion
                 //life delete
                 _inGameSceneManagerScript.DecreaseLife();
+                //deleteParticle
+                other.GetComponentInParent<ParticleController>().DeleteParticle();
             }
-            transform.GetComponent<Collider>().isTrigger = false;
         }
     }
     void OnExplotion(Vector3 src_position)
