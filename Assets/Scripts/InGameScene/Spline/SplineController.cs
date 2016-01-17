@@ -59,6 +59,7 @@ public class SplineController : MonoBehaviour
 			if (mCurrentIdx < Nodes.Length - 3)
 			{
 				mCurrentIdx++;
+                Debug.Log(mCurrentIdx);
 			}
 			else
 			{
@@ -114,14 +115,14 @@ public class SplineController : MonoBehaviour
 			Nodes [Nodes.Length - 1] = rawNodes [1];
 			break;
 		}
-
+        
 		for (int c = 1; c < Nodes.Length; c++) {
 			SplineNode node = Nodes [c];
 			SplineNode prevNode = Nodes [c - 1];
 
 			// Always interpolate using the shortest path -> Selective negation
 			if (Quaternion.Dot (node.rotation, prevNode.rotation) < 0) {
-				node.transform.rotation = new Quaternion(-node.rotation.x, -node.rotation.y, -node.rotation.z, -node.rotation.w);
+                Nodes[c].transform.rotation = new Quaternion(-node.rotation.x, -node.rotation.y, -node.rotation.z, -node.rotation.w);
 			}
 		}
 	}
