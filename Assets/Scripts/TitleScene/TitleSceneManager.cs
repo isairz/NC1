@@ -28,6 +28,8 @@ public class TitleSceneManager : MonoBehaviour{
         _character_transform = Character_img.GetComponent<Transform>();
         _src_position = _character_transform.localPosition;
         _des_position = _src_position + new Vector3(60f, 24f, 0f);
+
+        SoundEffectControl.Instance.PlayBackgroundMusic("Title Sound");
     }
     float timer = 0f;
     void Update()

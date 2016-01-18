@@ -7,12 +7,19 @@ public class InGameSceneManager : MonoBehaviour{
     public GameObject[] LifeUIObjects;
     private int _lifeValue;
 
+    public int Asteroid_num = 3;
+
     private ParticleController _ParticleControllerScript;
     void Awake() {
         SetLife(LifeUIObjects.Length);
         //get canvas
         myCanvas = GameObject.Find("Canvas").GetComponent<Canvas>();
         _ParticleControllerScript = GameObject.FindGameObjectWithTag("Player").GetComponent<ParticleController>();
+
+        //Make Asteroid
+        AsteroidMake();
+        //BGM
+        SoundEffectControl.Instance.PlayBackgroundMusic("bgm_gameStage1");
     }
     public void DecreaseLife() 
     {
@@ -42,6 +49,7 @@ public class InGameSceneManager : MonoBehaviour{
     private enum MouseStatus { deafault = 0, OnDown = 1,Down = 2,OnUp = 3}
     private MouseStatus _mouseState = MouseStatus.deafault;
     void Update() {
+        /// TouchButton Controller
         if (_mouseState == MouseStatus.OnDown)
         {
             Vector2 cur_position;
@@ -85,5 +93,45 @@ public class InGameSceneManager : MonoBehaviour{
             touchButton_bg.SetActive(false);
             touchButton_action.SetActive(false);
         }
+        /// End
+    }
+    void AsteroidMake() {
+        GameObject asteroidManager = new GameObject("asteroidManager");
+        GameObject asteroid;
+        for (int index = 0; index < Asteroid_num; index++)
+        {
+            switch (Random.Range(0, 3))
+            { 
+                case 0:
+                    asteroid = Instantiate((GameObject)Resources.Load("Prefabs/Asteroid_01", typeof(GameObject)));
+                    break;
+                case 1:
+                    asteroid = Instantiate((GameObject)Resources.Load("Prefabs/Asteroid_02", typeof(GameObject)));
+                    break;
+                default:
+                    asteroid = Instantiate((GameObject)Resources.Load("Prefabs/Asteroid_03", typeof(GameObject)));
+                    break;
+            }
+            asteroid.transform.parent = asteroidManager.transform;
+            StartCoroutine(AsteroidMove(asteroid));
+        }
+    }
+    Vector3 AsteroidRandomPostion()
+    {
+        return GameObject.FindGameObjectWithTag("Player").transform.position
+            + new Vector3(Random.Range(40f, 80f)*((Random.Range(0,2)==0) ? 1f : -1f),
+                Random.Range(40f, 80f) * ((Random.Range(0, 2) == 0) ? 1f : -1f),
+                Random.Range(40f, 80f) * ((Random.Range(0, 2) == 0) ? 1f : -1f));
+    }
+    IEnumerator AsteroidMove(GameObject asteroid) {
+        asteroid.transform.position = AsteroidRandomPostion();
+        Vector3 range = (GameObject.FindGameObjectWithTag("Player").transform.position - asteroid.transform.position).normalized;
+
+        while (Vector3.Distance(GameObject.FindGameObjectWithTag("Player").transform.position, asteroid.transform.position) < 500f)
+        {
+            asteroid.transform.position += range * 50f * Time.deltaTime;
+            yield return null;
+        }
+        StartCoroutine(AsteroidMove(asteroid));
     }
 }

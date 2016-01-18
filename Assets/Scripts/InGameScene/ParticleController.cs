@@ -16,7 +16,9 @@ public class ParticleController : MonoBehaviour
 
     private SphereCollider _sphereCollider;
     private float _particle_percentage;
-    public float Force { get { return _particle_percentage; } }
+    private bool _isOn_curParticleState, _isOn_prevParticleState;
+    private float _enegery = 0.3f;
+    public bool Force { get { return _isOn_curParticleState; } }
     // Use this for initialization
     void Awake()
     {
@@ -55,13 +57,13 @@ public class ParticleController : MonoBehaviour
                     child.gameObject.SetActive(true);
                     child.position = Position;
                     // Animation Speed 1f;
-                    StartCoroutine(ApearParticle(child.gameObject, 1f));
+                    StartCoroutine(ApearParticle(child.gameObject, 0.5f));
                 }
             }
             else
                 break;
         }
-        Debug.Log("add result: " + _particlesNumber);
+        //Debug.Log("add result: " + _particlesNumber);
     }
     public void DeleteParticle()
     {
@@ -82,15 +84,13 @@ public class ParticleController : MonoBehaviour
             else
                 break;
         }
-        Debug.Log("delete result: " + _particlesNumber);
+        //Debug.Log("delete result: " + _particlesNumber);
     }
     IEnumerator ApearParticle(GameObject particle, float time)
     {
-        Color c = new Color(1f, 0f, 0f);
-        particle.GetComponent<MeshRenderer>().material.color = c;
         particle.tag = "Apearing";
         float startTime = 0f;
-        Vector3 range = new Vector3(Random.Range(0f, 1f), Random.Range(0f, 1f), Random.Range(0f, 1f));
+        Vector3 range = new Vector3(Random.Range(-1f, 1f), Random.Range(-1f, 1f), Random.Range(-1f, 1f));
         range.Normalize();
 
         while (time > startTime)
@@ -100,16 +100,12 @@ public class ParticleController : MonoBehaviour
             yield return null;
         }
         particle.tag = "Living";
-        c = new Color(0f, 1f, 0f);
-        particle.GetComponent<MeshRenderer>().material.color = c;
     }
     IEnumerator DispearParticle(GameObject particle, float time)
     {
-        Color c = new Color(0f, 0f, 1f);
-        particle.GetComponent<MeshRenderer>().material.color = c;
         particle.tag = "Disapearing";
         float startTime = 0f;
-        Vector3 range = new Vector3(Random.Range(0f, 1f), Random.Range(0f, 1f), Random.Range(0f, 1f));
+        Vector3 range = new Vector3(Random.Range(-1f, 1f), Random.Range(-1f, 1f), Random.Range(-1f, 1f));
         range.Normalize();
 
         while (time > startTime)
@@ -130,12 +126,33 @@ public class ParticleController : MonoBehaviour
         newParticle.GetComponent<MeshRenderer>().material.color = c;
     }
     // Update is called once per frame
+    private float rechargineTime = 0f, currentTime = 0f;
     void FixedUpdate()
     {
-        bool boom = Input.GetMouseButton(0);
+        bool boom = !Input.GetMouseButton(0);
         Vector3 massPoint = new Vector3();
 
-        //int count = 0;
+        ///Enegy
+        if (Mathf.Abs(rechargineTime) >= 0.001f)
+        {
+            currentTime += Time.deltaTime;
+            if (currentTime > rechargineTime)
+            {
+                rechargineTime = 0f;
+                currentTime = 0f;
+            }
+            else
+                boom = true;
+        }
+        else if (_enegery <= 0f)
+            rechargineTime = 3f;
+        
+        if (boom)
+            _enegery = (_enegery >= 1f) ? 1f : _enegery + 0.1f * Time.deltaTime;
+        else
+            _enegery = (_enegery <= 0f) ? 0f : _enegery - 0.1f * Time.deltaTime;
+        //Debug.Log(_enegery);
+        ///End
         foreach (Transform child in transform)
         {
             if (child.gameObject.activeSelf && child.gameObject.CompareTag("Living"))
@@ -151,7 +168,7 @@ public class ParticleController : MonoBehaviour
                 massPoint += child.position;
             }
         }
-        //Debug.Log("count:" + count + "/total: " + _particlesNumber);
+
         massPoint /= _particlesNumber;
 
         // massPoint > Sphere
@@ -177,19 +194,33 @@ public class ParticleController : MonoBehaviour
                     rig.AddForce(-dir * dist * spreadSpeed, ForceMode.Acceleration);
                 }
             }
-            // num' particle > powerW
-            // get percentage ( 0 ~ 1 )
-            _particle_percentage = _particle_percentage / _particlesNumber;
         }
+        // num' particle > get percentage ( 0 ~ 1 )
+        _particle_percentage = _particle_percentage / _particlesNumber;
+        // trigger force
+        _isOn_curParticleState = (_particle_percentage >= 0.8f) ? true : false;
+
+        if (_isOn_prevParticleState != _isOn_curParticleState)
+            ChangeParticleColor((_isOn_curParticleState) ? new Color(1f, 0f, 0f) : new Color(0f, 1f, 0f));
+        
+        _isOn_prevParticleState = _isOn_curParticleState;
+    }
+    void ChangeParticleColor(Color c) 
+    {
+        foreach (Transform child in transform)
+            child.gameObject.GetComponent<MeshRenderer>().material.color = c;
     }
     public void Action(Vector3 ControllerForce)
     {
+        Vector3 range = GameObject.FindGameObjectWithTag("MainCamera").
+            GetComponent<Camera>().cameraToWorldMatrix * ControllerForce;
+
         foreach (Transform child in transform)
         {
             if (child.gameObject.activeSelf && child.gameObject.CompareTag("Living"))
             {
                 Rigidbody rig = child.GetComponent<Rigidbody>();
-                rig.AddForce(ControllerForce * 50f, ForceMode.Impulse);
+                rig.AddForce(range * 50f, ForceMode.Impulse);
             }
         }
     }

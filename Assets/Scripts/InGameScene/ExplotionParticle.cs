@@ -9,9 +9,7 @@ public class ExplotionParticle : MonoBehaviour
     public float exlpotion_speed = 100f;
     public explotionName particle_name;
     public GameObject originalParticle = null;
-    // force(intType)
-    private float trigger_force = 0.8f;
-    // 
+    public bool isCrash;
     public float trigger_time = 7f;
     private bool _isCrash = false;
 
@@ -30,7 +28,7 @@ public class ExplotionParticle : MonoBehaviour
         // number(parameter)
         GameObject[] Child_GameObjects = new GameObject[particle_num];
 
-        Vector3 newScale = transform.localScale / particle_num;
+        Vector3 newScale = (transform.localScale / particle_num) * 0.5f;
         Bounds bounds = transform.GetComponent<Renderer>().bounds;
         Vector3 min = bounds.min, max = bounds.max;
 
@@ -43,20 +41,27 @@ public class ExplotionParticle : MonoBehaviour
 
             GameObject Child_GameObject = null;
 
-            if(particle_name == explotionName.cube)
+            if (particle_name == explotionName.cube)
+            {
                 Child_GameObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            else if(particle_name == explotionName.sphere)
+                Child_GameObject.AddComponent<Rigidbody>();
+                Child_GameObject.GetComponent<Rigidbody>().useGravity = false;
+                Child_GameObject.GetComponent<Collider>().enabled = false;
+            }
+            else if (particle_name == explotionName.sphere)
+            {
                 Child_GameObject = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            else if(particle_name == explotionName._default)
+                Child_GameObject.AddComponent<Rigidbody>();
+                Child_GameObject.GetComponent<Rigidbody>().useGravity = false;
+                Child_GameObject.GetComponent<Collider>().enabled = false;
+            }
+            else if (particle_name == explotionName._default)
                 Child_GameObject = Instantiate(originalParticle);
 
             Child_GameObject.transform.parent = transform;
             Child_GameObject.transform.position = newPosition;
             Child_GameObject.transform.localScale = newScale;
 
-            Child_GameObject.AddComponent<Rigidbody>();
-            Child_GameObject.GetComponent<Rigidbody>().useGravity = false;
-            Child_GameObject.GetComponent<Collider>().enabled = false;
             Child_GameObject.SetActive(false);
 
             Child_GameObjects[index] = Child_GameObject;
@@ -71,8 +76,7 @@ public class ExplotionParticle : MonoBehaviour
             transform.GetComponent<Collider>().isTrigger = false;
 
             //get player_force(particle_num)
-            float force_power = other.GetComponentInParent<ParticleController>().Force;
-            if (force_power >= trigger_force)
+            if (isCrash && other.GetComponentInParent<ParticleController>().Force)
             {
                 //Debug.Log("Explotion :" + transform.gameObject.name);
                 //onExplotion
