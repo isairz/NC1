@@ -6,6 +6,7 @@ public class SplineNode : MonoBehaviour {
 	public eSplineMode SplineMode = eSplineMode.Spline;
 	public float Time;
 	public Vector2 EaseIO;
+	public Material skyMat;
 
 	public Vector3 position {
 		get {

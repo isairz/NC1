@@ -25,6 +25,8 @@ public class SplineController : MonoBehaviour
 	public bool AutoStart = true;
 	public bool AutoClose = true;
 
+	public Renderer SkyDome;
+
 	[HideInInspector]
 	public bool initialized = false;
 	public string initialName = "";
@@ -58,8 +60,7 @@ public class SplineController : MonoBehaviour
 		{
 			if (mCurrentIdx < Nodes.Length - 3)
 			{
-				mCurrentIdx++;
-                //Debug.Log(mCurrentIdx);
+				NextStep ();
 			}
 			else
 			{
@@ -87,6 +88,15 @@ public class SplineController : MonoBehaviour
 			// param = MathUtils.Ease(param, Nodes[mCurrentIdx].EaseIO.x, Nodes[mCurrentIdx].EaseIO.y);
 			transform.position = GetHermiteInternal(mCurrentIdx, param);
 			transform.rotation = GetSquad(mCurrentIdx, param);
+		}
+	}
+
+	void NextStep() {
+		mCurrentIdx++;
+		Debug.Log (mCurrentIdx);
+
+		if (Nodes [mCurrentIdx].skyMat) {
+			SkyDome.sharedMaterial = Nodes [mCurrentIdx].skyMat;
 		}
 	}
 
