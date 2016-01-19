@@ -238,7 +238,7 @@ public class SplineController : MonoBehaviour
 		volLineStrip.LineColor = Color.cyan;
 		volLineStrip.LineWidth = 1.5f;
 
-		const int step = 1000;
+		const int step = 20;
 		int idx = 1;
 		var lineVertices = new Vector3[(Nodes.Length - 3) * step + 1];
 
