@@ -1,4 +1,5 @@
 using UnityEngine;
+using VolumetricLines;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -46,6 +47,7 @@ public class SplineController : MonoBehaviour
 		if (AutoStart) {
 			mState = WrapMode.ToString ();
 		}
+		DrawSpline ();
 	}
 
 	void Update()
@@ -199,9 +201,9 @@ public class SplineController : MonoBehaviour
 		return GetHermiteInternal(idx, param);
 	}
 
-	void DrawSpline()
-	{
-		const int step = 100;
+	// To show the lines in the editor
+	void OnDrawGizmos() {
+		const int step = 10;
 		for(int i = 1; i < Nodes.Length - 2; i++) {
 			Vector3 prevPos = GetHermiteInternal (i, 0f);
 			for (float t = 0; t <= step; t++) {
@@ -218,46 +220,44 @@ public class SplineController : MonoBehaviour
 		}
 	}
 
-	// To show the lines in the game window whne it is running
-	public void OnPostRender() {
-		DrawSpline();
-	}
-
-	// To show the lines in the editor
-	void OnDrawGizmos() {
-		DrawSpline();
-	}
-
-	/*
-	void SetupSplineInterpolator(SplineInterpolator interp, Transform[] trans)
+	void DrawSpline ()
 	{
-		interp.Reset();
+		// Create an empty game object
+		GameObject go = new GameObject();
 
-		float step = (AutoClose) ? Duration / trans.Length :
-			Duration / (trans.Length - 1);
+		// Add the MeshFilter component, VolumetricLineStripBehavior requires it
+		go.AddComponent<MeshFilter>();
 
-		int c;
-		for (c = 0; c < trans.Length; c++)
-		{
-			if (OrientationMode == eOrientationMode.NODE)
-			{
-				interp.AddPoint(trans[c].position, trans[c].rotation, step * c, new Vector2(0, 1));
-			}
-			else if (OrientationMode == eOrientationMode.TANGENT)
-			{
-				Quaternion rot;
-				if (c != trans.Length - 1)
-					rot = Quaternion.LookRotation(trans[c + 1].position - trans[c].position, trans[c].up);
-				else if (AutoClose)
-					rot = Quaternion.LookRotation(trans[0].position - trans[c].position, trans[c].up);
-				else
-					rot = trans[c].rotation;
+		// Add a MeshRenderer, VolumetricLineStripBehavior requires it, and set the material
+		var meshRenderer = go.AddComponent<MeshRenderer>();
+		meshRenderer.material = lineMat;
 
-				interp.AddPoint(trans[c].position, rot, step * c, new Vector2(0, 1));
+		// Add the VolumetricLineStripBehavior and set parameters, like color and all the vertices of the line
+		var volLineStrip = go.AddComponent<VolumetricLineStripBehavior>();
+		volLineStrip.SetLineColorAtStart = true;
+		volLineStrip.LineColor = Color.cyan;
+		volLineStrip.LineWidth = 1.5f;
+
+		const int step = 1000;
+		int idx = 1;
+		var lineVertices = new Vector3[(Nodes.Length - 3) * step + 1];
+
+		lineVertices [0] = GetHermiteInternal (1, 0);
+
+		for(int i = 1; i < Nodes.Length - 2; i++) {
+			for (int t = 1; t <= step; t++) {
+				Vector3 pos = GetHermiteInternal (i, (float)t/step);
+				lineVertices[idx++] = gameObject.transform.TransformPoint(pos);
+				/*GL.Begin(GL.LINES);
+				lineMat.SetPass(0);
+				GL.Color(new Color(lineMat.color.r, lineMat.color.g, lineMat.color.b, lineMat.color.a));
+				// GL.Color(SplineColor);
+				GL.Vertex(prevPos);
+				GL.Vertex(pos);
+				GL.End();*/
 			}
 		}
 
-		if (AutoClose)
-			interp.SetAutoCloseMode(step * c);
-	} */
+		volLineStrip.UpdateLineVertices(lineVertices);
+	}
 }

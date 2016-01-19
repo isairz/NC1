@@ -6,6 +6,6 @@ public class SplineRender : MonoBehaviour {
 
 	// To show the lines in the game window whne it is running
 	void OnPostRender() {
-		Controller.OnPostRender();
+		// Controller.OnPostRender();
 	}
 }
