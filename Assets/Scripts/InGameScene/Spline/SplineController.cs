@@ -206,15 +206,9 @@ public class SplineController : MonoBehaviour
 		const int step = 10;
 		for(int i = 1; i < Nodes.Length - 2; i++) {
 			Vector3 prevPos = GetHermiteInternal (i, 0f);
-			for (float t = 0; t <= step; t++) {
+			for (int t = 1; t <= step; t++) {
 				Vector3 pos = GetHermiteInternal (i, (float)t/step);
-				GL.Begin(GL.LINES);
-				lineMat.SetPass(0);
-				GL.Color(new Color(lineMat.color.r, lineMat.color.g, lineMat.color.b, lineMat.color.a));
-				// GL.Color(SplineColor);
-				GL.Vertex(prevPos);
-				GL.Vertex(pos);
-				GL.End();
+				Gizmos.DrawLine (prevPos, pos);
 				prevPos = pos;
 			}
 		}
