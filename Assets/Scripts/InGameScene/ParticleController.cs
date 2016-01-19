@@ -21,8 +21,8 @@ public class ParticleController : MonoBehaviour
     private bool _piverTime = false;
     private int _combo = 0;
     public float GAUAGE { get { return _gauge; } set { if (!_piverTime) _gauge = value; } }
-    public int ParticlesNumber { get { return _particlesNumber; } set { if (!_piverTime) _particlesNumber = value; } }
-    public float HP { get { return (float)ParticlesNumber / (float)Maximum_particles; } }
+    //public int ParticlesNumber { get { return _particlesNumber; } set { if (!_piverTime) _particlesNumber = value; } }
+    public float HP { get { return (float)_particlesNumber / (float)Maximum_particles; } }
     public bool Force { get { return _isOn_curParticleState; } }
     public int COMBO { get { return _combo; } set { _combo = value; } }
     // Use this for initialization
@@ -37,7 +37,7 @@ public class ParticleController : MonoBehaviour
         int index = 0;
         foreach (Transform child in transform)
         {
-            if ((Maximum_particles - ParticlesNumber) > index)
+            if ((Maximum_particles - _particlesNumber) > index)
             {
                 ++index;
                 child.gameObject.SetActive(false);
@@ -50,7 +50,7 @@ public class ParticleController : MonoBehaviour
     }
     public void AddParticle(Vector3 Position)
     {
-        int add_number = (int)(ParticlesNumber * 0.2);
+        int add_number = (int)(_particlesNumber * 0.2);
         int index = 0;
         foreach (Transform child in transform)
         {
@@ -58,10 +58,9 @@ public class ParticleController : MonoBehaviour
             {
                 if (!child.gameObject.activeSelf)
                 {
-                    ++ParticlesNumber;
                     ++index;
                     child.gameObject.SetActive(true);
-                    child.position = Position;
+                    child.position = transform.position;//Position;
                     // Animation Speed 1f;
                     StartCoroutine(ApearParticle(child.gameObject, 0.5f));
                 }
@@ -73,14 +72,14 @@ public class ParticleController : MonoBehaviour
     public void DeleteParticle()
     {
         int index = 0;
-        int delete_number = (int)(ParticlesNumber * 0.3);
+        int delete_number = (int)(_particlesNumber * 0.3);
+        if(_particlesNumber - delete_number > 5)
         foreach (Transform child in transform)
         {
             if (delete_number > index)
             {
                 if (child.gameObject.activeSelf && child.gameObject.CompareTag("Living"))
                 {
-                    --ParticlesNumber;
                     ++index;
                     // Animation Speed 2f;
                     StartCoroutine(DispearParticle(child.gameObject, 2f));
@@ -94,13 +93,14 @@ public class ParticleController : MonoBehaviour
     {
         particle.tag = "Apearing";
         float startTime = 0f;
-        Vector3 range = new Vector3(Random.Range(-1f, 1f), Random.Range(-1f, 1f), Random.Range(-1f, 1f));
-        range.Normalize();
+        // TODO
+        //Vector3 range = new Vector3(Random.Range(-1f, 1f), Random.Range(-1f, 1f), Random.Range(-1f, 1f));
+        //range.Normalize();
 
         while (time > startTime)
         {
             startTime += Time.deltaTime;
-            particle.GetComponent<Rigidbody>().AddForce(range, ForceMode.Impulse);
+            //particle.GetComponent<Rigidbody>().AddForce(range, ForceMode.Impulse);
             yield return null;
         }
         particle.tag = "Living";
@@ -176,6 +176,7 @@ public class ParticleController : MonoBehaviour
             ChangeParticleEnergy(true, (GAUAGE <= 0f) ? 0f : GAUAGE - 0.01f * Time.deltaTime);
         //Debug.Log(_gauge);
         ///End
+        int massCounter = 0;
         foreach (Transform child in transform)
         {
             if (child.gameObject.activeSelf && child.gameObject.CompareTag("Living"))
@@ -189,16 +190,14 @@ public class ParticleController : MonoBehaviour
                     return;*/
                 rig.AddForce(dir * dist * dist * collectSpeed, ForceMode.Acceleration);
                 massPoint += child.position;
+                ++massCounter;
             }
         }
-
-        massPoint /= ParticlesNumber;
+        _particlesNumber = massCounter;
+        massPoint /= _particlesNumber;
+        //TODO
         _sphereCollider.center = massPoint - transform.position;
 
-        // massPoint > Sphere
-        // 충돌 이슈!
-        //_sphereCollider.center = massPoint;
-        //Debug.Log(_sphereCollider.transform.position);
         float _particle_percentage = 0;
 
         foreach (Transform child in transform)
@@ -220,14 +219,14 @@ public class ParticleController : MonoBehaviour
             }
         }
         // num' particle > get percentage ( 0 ~ 1 )
-        _power = _particle_percentage / ParticlesNumber;
+        _power = _particle_percentage / _particlesNumber;
         // trigger force
         _isOn_curParticleState = (_power >= 0.8f) ? true : false;
 
         if (_isOn_prevParticleState != _isOn_curParticleState)
         {
             // _isOn_curParticleState
-            ChangeParticleTriggerState(_isOn_curParticleState);
+            ;// ChangeParticleTriggerState(_isOn_curParticleState);
         }
         
         _isOn_prevParticleState = _isOn_curParticleState;
@@ -237,20 +236,21 @@ public class ParticleController : MonoBehaviour
         foreach (Transform child in transform)
         {
             if (child.gameObject.activeSelf && child.gameObject.CompareTag("Living"))
-                child.GetComponent<Collider>().isTrigger = state;
+                child.GetComponent<SphereCollider>().isTrigger = state;
         }
     }
     public void Action(Vector3 ControllerForce)
     {
         Vector3 range = GameObject.FindGameObjectWithTag("MainCamera").
             GetComponent<Camera>().cameraToWorldMatrix * ControllerForce;
-
+        range.Normalize();
+        Debug.Log(range);
         foreach (Transform child in transform)
         {
             if (child.gameObject.activeSelf && child.gameObject.CompareTag("Living"))
             {
                 Rigidbody rig = child.GetComponent<Rigidbody>();
-                rig.AddForce(range * 50f, ForceMode.Impulse);
+                rig.AddForce(range * 200f * rig.mass, ForceMode.Impulse);
             }
         }
     }

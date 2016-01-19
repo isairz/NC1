@@ -74,7 +74,8 @@ public class ExplotionParticle : MonoBehaviour
         if (other.CompareTag("Living"))
         {
             if (_crashState == CrashState.isDefault && Vector3.Distance(other.transform.position, transform.position)
-                <= (transform.GetComponent<SphereCollider>().radius * transform.localScale.x + other.GetComponent<SphereCollider>().radius) * 1.5f)
+                <= (transform.GetComponent<SphereCollider>().radius * transform.localScale.x 
+                + other.GetComponent<SphereCollider>().radius * other.transform.localScale.x) * 1.5f)
             {
                 transform.GetComponent<SphereCollider>().isTrigger = false;
                 //get player_force(particle_num)
@@ -82,7 +83,7 @@ public class ExplotionParticle : MonoBehaviour
                 {
                     isCrash = false;
                     _crashState = CrashState.isCrash;
-                    Debug.Log("Explotion!");
+                    //Debug.Log("Explotion!");
                     //onExplotion
                     OnExplotion(other.transform.position);
                     //makeParticle
@@ -95,7 +96,7 @@ public class ExplotionParticle : MonoBehaviour
                 else
                 {
                     _crashState = CrashState.isNotCrash;
-                    Debug.Log("NotExplotion!");
+                    //Debug.Log("NotExplotion!");
                     //notExplotion
                     // set COMBO
                     _particleControllerScript.COMBO = 0;
@@ -109,7 +110,7 @@ public class ExplotionParticle : MonoBehaviour
         if (other.CompareTag("Living") && _crashState == CrashState.isDefault)
         {
             // escape
-            Debug.Log("Escape!");
+            //Debug.Log("Escape!");
             _crashState = CrashState.isEnd;
             transform.GetComponent<BoxCollider>().isTrigger = false;
             //get COMBO

@@ -52,7 +52,8 @@ public class InGameSceneManager : MonoBehaviour{
     void Update() {
         /// UI
         UIUpdate();
-        
+    }
+    void FixedUpdate() {
         /// TouchButton Controller
         if (_mouseState == MouseStatus.OnDown)
         {
@@ -76,8 +77,8 @@ public class InGameSceneManager : MonoBehaviour{
 
             first_position = cur_position;
         }
-        
-        if (Input.GetMouseButtonUp(0))
+
+        if (_mouseState == MouseStatus.OnDown && Input.GetMouseButtonUp(0))
         {
             Vector2 cur_position;
             RectTransformUtility.ScreenPointToLocalPointInRectangle(myCanvas.transform as RectTransform, Input.mousePosition, myCanvas.worldCamera, out cur_position);
@@ -91,6 +92,7 @@ public class InGameSceneManager : MonoBehaviour{
                 Vector3.zero,
                 (cur_position - first_position).normalized,
                 1f);
+                Debug.Log("Force:");
                 _ParticleControllerScript.Action(ControllerForce);
             }
             _mouseState = MouseStatus.OnUp;
@@ -98,8 +100,8 @@ public class InGameSceneManager : MonoBehaviour{
             touchButton_action.SetActive(false);
         }
         /// End
-    }
-    void AsteroidMake() {
+        }
+        void AsteroidMake() {
         GameObject asteroidManager = new GameObject("asteroidManager");
         GameObject asteroid;
         for (int index = 0; index < Asteroid_num; index++)
