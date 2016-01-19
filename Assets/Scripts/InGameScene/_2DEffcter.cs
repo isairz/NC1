@@ -19,7 +19,7 @@ public class _2DEffcter : MonoBehaviour {
 
     void Start(){
         _canvasEffecter = Instantiate((GameObject)Resources.Load("Prefabs/EffectPrefab", typeof(GameObject)));
-        _canvasEffecter.transform.SetParent(GameObject.Find("UIEffect").transform);
+        _canvasEffecter.transform.SetParent(GameObject.Find("Canvas").transform);
 
         _UiImage = _canvasEffecter.GetComponent<Image>();
         _UiImage.enabled = false;

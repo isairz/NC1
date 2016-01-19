@@ -15,10 +15,16 @@ public class ParticleController : MonoBehaviour
     protected new Transform transform;
 
     private SphereCollider _sphereCollider;
-    private float _particle_percentage;
     private bool _isOn_curParticleState, _isOn_prevParticleState;
-    private float _enegery = 0.3f;
+    private float _gauge = 0.3f;
+    private float _power = 1f;
+    private bool _piverTime = false;
+    private int _combo = 0;
+    public float GAUAGE { get { return _gauge; } set { if (!_piverTime) _gauge = value; } }
+    public int ParticlesNumber { get { return _particlesNumber; } set { if (!_piverTime) _particlesNumber = value; } }
+    public float HP { get { return (float)ParticlesNumber / (float)Maximum_particles; } }
     public bool Force { get { return _isOn_curParticleState; } }
+    public int COMBO { get { return _combo; } set { _combo = value; } }
     // Use this for initialization
     void Awake()
     {
@@ -31,7 +37,7 @@ public class ParticleController : MonoBehaviour
         int index = 0;
         foreach (Transform child in transform)
         {
-            if ((Maximum_particles - _particlesNumber) > index)
+            if ((Maximum_particles - ParticlesNumber) > index)
             {
                 ++index;
                 child.gameObject.SetActive(false);
@@ -44,7 +50,7 @@ public class ParticleController : MonoBehaviour
     }
     public void AddParticle(Vector3 Position)
     {
-        int add_number = (int)(_particlesNumber * 0.2);
+        int add_number = (int)(ParticlesNumber * 0.2);
         int index = 0;
         foreach (Transform child in transform)
         {
@@ -52,7 +58,7 @@ public class ParticleController : MonoBehaviour
             {
                 if (!child.gameObject.activeSelf)
                 {
-                    ++_particlesNumber;
+                    ++ParticlesNumber;
                     ++index;
                     child.gameObject.SetActive(true);
                     child.position = Position;
@@ -63,19 +69,18 @@ public class ParticleController : MonoBehaviour
             else
                 break;
         }
-        //Debug.Log("add result: " + _particlesNumber);
     }
     public void DeleteParticle()
     {
         int index = 0;
-        int delete_number = (int)(_particlesNumber * 0.3);
+        int delete_number = (int)(ParticlesNumber * 0.3);
         foreach (Transform child in transform)
         {
             if (delete_number > index)
             {
                 if (child.gameObject.activeSelf && child.gameObject.CompareTag("Living"))
                 {
-                    --_particlesNumber;
+                    --ParticlesNumber;
                     ++index;
                     // Animation Speed 2f;
                     StartCoroutine(DispearParticle(child.gameObject, 2f));
@@ -84,7 +89,6 @@ public class ParticleController : MonoBehaviour
             else
                 break;
         }
-        //Debug.Log("delete result: " + _particlesNumber);
     }
     IEnumerator ApearParticle(GameObject particle, float time)
     {
@@ -116,6 +120,19 @@ public class ParticleController : MonoBehaviour
         }
         particle.SetActive(false);
     }
+    IEnumerator PiverTime(float time) {
+        float startTime = 0f;
+
+        _piverTime = true;
+        while (time > startTime)
+        {
+            startTime += Time.deltaTime;
+            yield return null;
+        }
+        _piverTime = false;
+        // reset default energy
+        _gauge = 0.3f;
+    }
     private void MakeParticle(Vector3 Position)
     {
         Transform newParticle = Instantiate(particleBase);
@@ -144,14 +161,20 @@ public class ParticleController : MonoBehaviour
             else
                 boom = true;
         }
-        else if (_enegery <= 0f)
+        else if (GAUAGE <= 0f)
             rechargineTime = 3f;
-        
+        // invincibility Time
+        else if (GAUAGE >= 1f)
+        {
+            // set piverTime 10f
+            StartCoroutine(PiverTime(10f));
+        }
+
         if (boom)
-            _enegery = (_enegery >= 1f) ? 1f : _enegery + 0.1f * Time.deltaTime;
+            ChangeParticleEnergy(true, (GAUAGE >= 1f) ? 1f : GAUAGE + 0.01f * Time.deltaTime);
         else
-            _enegery = (_enegery <= 0f) ? 0f : _enegery - 0.1f * Time.deltaTime;
-        //Debug.Log(_enegery);
+            ChangeParticleEnergy(true, (GAUAGE <= 0f) ? 0f : GAUAGE - 0.01f * Time.deltaTime);
+        //Debug.Log(_gauge);
         ///End
         foreach (Transform child in transform)
         {
@@ -169,13 +192,14 @@ public class ParticleController : MonoBehaviour
             }
         }
 
-        massPoint /= _particlesNumber;
+        massPoint /= ParticlesNumber;
+        _sphereCollider.center = massPoint - transform.position;
 
         // massPoint > Sphere
         // 충돌 이슈!
         //_sphereCollider.center = massPoint;
         //Debug.Log(_sphereCollider.transform.position);
-        _particle_percentage = 0;
+        float _particle_percentage = 0;
 
         foreach (Transform child in transform)
         {
@@ -196,19 +220,25 @@ public class ParticleController : MonoBehaviour
             }
         }
         // num' particle > get percentage ( 0 ~ 1 )
-        _particle_percentage = _particle_percentage / _particlesNumber;
+        _power = _particle_percentage / ParticlesNumber;
         // trigger force
-        _isOn_curParticleState = (_particle_percentage >= 0.8f) ? true : false;
+        _isOn_curParticleState = (_power >= 0.8f) ? true : false;
 
         if (_isOn_prevParticleState != _isOn_curParticleState)
-            ChangeParticleColor((_isOn_curParticleState) ? new Color(1f, 0f, 0f) : new Color(0f, 1f, 0f));
+        {
+            // _isOn_curParticleState
+            ChangeParticleTriggerState(_isOn_curParticleState);
+        }
         
         _isOn_prevParticleState = _isOn_curParticleState;
     }
-    void ChangeParticleColor(Color c) 
+    public void ChangeParticleTriggerState(bool state)
     {
         foreach (Transform child in transform)
-            child.gameObject.GetComponent<MeshRenderer>().material.color = c;
+        {
+            if (child.gameObject.activeSelf && child.gameObject.CompareTag("Living"))
+                child.GetComponent<Collider>().isTrigger = state;
+        }
     }
     public void Action(Vector3 ControllerForce)
     {
@@ -224,4 +254,11 @@ public class ParticleController : MonoBehaviour
             }
         }
     }
+    public void ChangeParticleEnergy(bool equalType, float value) {
+        if (equalType)
+            GAUAGE = value;
+        else
+            GAUAGE += value;
+    }
+
 }

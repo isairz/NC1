@@ -3,22 +3,23 @@ using System.Collections;
 
 public class ExplotionParticle : MonoBehaviour
 {
+    private enum CrashState { isDefault = 0, isCrash = 1, isNotCrash = 2, isEscape = 3, isEnd = 4 }
     public enum explotionName { cube = 0, sphere = 1, _default = 2}
     // particle_number
     public int particle_num = 8;
     public float exlpotion_speed = 100f;
     public explotionName particle_name;
     public GameObject originalParticle = null;
-    public bool isCrash;
     public float trigger_time = 7f;
-    private bool _isCrash = false;
+    private CrashState _crashState = CrashState.isDefault;
+    public bool isCrash = false;
 
     private new Transform transform;
-    private InGameSceneManager _inGameSceneManagerScript;
+    private ParticleController _particleControllerScript;
     void Awake()
     {
         transform = GetComponent<Transform>();
-        _inGameSceneManagerScript = GameObject.FindGameObjectWithTag("GameController").GetComponent<InGameSceneManager>();
+        _particleControllerScript = GameObject.FindGameObjectWithTag("Player").GetComponent<ParticleController>();
         prepareObject();
     }
     void prepareObject()
@@ -67,32 +68,54 @@ public class ExplotionParticle : MonoBehaviour
             Child_GameObjects[index] = Child_GameObject;
         }
     }
-    void OnTriggerEnter(Collider other)
+    void OnTriggerStay(Collider other)
     {
         //enter the player
-        if (other.CompareTag("Living") && !_isCrash)
+        if (other.CompareTag("Living"))
         {
-            _isCrash = true;
-            transform.GetComponent<Collider>().isTrigger = false;
-
-            //get player_force(particle_num)
-            if (isCrash && other.GetComponentInParent<ParticleController>().Force)
+            if (_crashState == CrashState.isDefault && Vector3.Distance(other.transform.position, transform.position)
+                <= (transform.GetComponent<SphereCollider>().radius * transform.localScale.x + other.GetComponent<SphereCollider>().radius) * 1.5f)
             {
-                //Debug.Log("Explotion :" + transform.gameObject.name);
-                //onExplotion
-                OnExplotion(other.transform.position);
-                //makeParticle
-                other.GetComponentInParent<ParticleController>().AddParticle(transform.position);
+                transform.GetComponent<SphereCollider>().isTrigger = false;
+                //get player_force(particle_num)
+                if (isCrash && other.GetComponentInParent<ParticleController>().Force)
+                {
+                    isCrash = false;
+                    _crashState = CrashState.isCrash;
+                    Debug.Log("Explotion!");
+                    //onExplotion
+                    OnExplotion(other.transform.position);
+                    //makeParticle
+                    other.GetComponentInParent<ParticleController>().AddParticle(transform.position);
+                    //get COMBO
+                    ++_particleControllerScript.COMBO;
+                    //getGAUAGE
+                    _particleControllerScript.ChangeParticleEnergy(false, 0.1f);
+                }
+                else
+                {
+                    _crashState = CrashState.isNotCrash;
+                    Debug.Log("NotExplotion!");
+                    //notExplotion
+                    // set COMBO
+                    _particleControllerScript.COMBO = 0;
+                    //deleteParticle
+                    other.GetComponentInParent<ParticleController>().DeleteParticle();
+                }
             }
-            else
-            {
-                //Debug.Log("NotExplotion :"+transform.gameObject.name);
-                //notExplotion
-                //life delete
-                _inGameSceneManagerScript.DecreaseLife();
-                //deleteParticle
-                other.GetComponentInParent<ParticleController>().DeleteParticle();
-            }
+        }
+    }
+    void OnTriggerExit(Collider other) {
+        if (other.CompareTag("Living") && _crashState == CrashState.isDefault)
+        {
+            // escape
+            Debug.Log("Escape!");
+            _crashState = CrashState.isEnd;
+            transform.GetComponent<BoxCollider>().isTrigger = false;
+            //get COMBO
+            ++_particleControllerScript.COMBO;
+            //get GAUAGE
+            _particleControllerScript.ChangeParticleEnergy(false, 0.1f);
         }
     }
     void OnExplotion(Vector3 src_position)

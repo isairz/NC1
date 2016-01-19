@@ -4,43 +4,27 @@ using UnityEngine.UI;
 
 public class InGameSceneManager : MonoBehaviour{
 
-    public GameObject[] LifeUIObjects;
-    private int _lifeValue;
+    public GameObject HP_UI_Object;
+    private ImageNumberControl HP_UI_Script;
+    public GameObject COMBO_UI_Object;
+    private ImageNumberControl COMBO_UI_Script;
 
     public int Asteroid_num = 3;
 
     private ParticleController _ParticleControllerScript;
+
+    public int Combo = 0;
     void Awake() {
-        SetLife(LifeUIObjects.Length);
         //get canvas
         myCanvas = GameObject.Find("Canvas").GetComponent<Canvas>();
         _ParticleControllerScript = GameObject.FindGameObjectWithTag("Player").GetComponent<ParticleController>();
-
+        //Attatch UI Script
+        HP_UI_Script = HP_UI_Object.GetComponent<ImageNumberControl>();
+        COMBO_UI_Script = COMBO_UI_Object.GetComponent<ImageNumberControl>();
         //Make Asteroid
         AsteroidMake();
         //BGM
         SoundEffectControl.Instance.PlayBackgroundMusic("bgm_gameStage1");
-    }
-    public void DecreaseLife() 
-    {
-        --_lifeValue;
-        UpdateLifeUI();
-    }
-    public void SetLife(int lifeNum)
-    {
-        _lifeValue = lifeNum;
-        UpdateLifeUI();
-    }
-    private void UpdateLifeUI() 
-    {
-        for (int index = 0; index < LifeUIObjects.Length; index++)
-        {
-            if (index < _lifeValue)
-                LifeUIObjects[index].SetActive(true);
-            else
-                LifeUIObjects[index].SetActive(false);
-        }
-
     }
     public GameObject touchButton_bg, touchButton_action;
     private float _deadZoneRadius = 40f;
@@ -48,7 +32,27 @@ public class InGameSceneManager : MonoBehaviour{
     private Canvas myCanvas;
     private enum MouseStatus { deafault = 0, OnDown = 1,Down = 2,OnUp = 3}
     private MouseStatus _mouseState = MouseStatus.deafault;
+    public GameObject[] UIGUAGE;
+
+    void UIUpdate() {
+        /// #HP
+        HP_UI_Script.SetValue((int)(_ParticleControllerScript.HP * 100));
+        /// #COMBO
+        COMBO_UI_Script.SetValueTime(_ParticleControllerScript.COMBO);
+        /// #GUAGE
+        int guage = (int)(_ParticleControllerScript.GAUAGE * 5f);
+        for (int index = 0; index < UIGUAGE.Length; index++)
+        {
+            if (index <= guage)
+                UIGUAGE[index].SetActive(true);
+            else
+                UIGUAGE[index].SetActive(false);
+        }
+    }
     void Update() {
+        /// UI
+        UIUpdate();
+        
         /// TouchButton Controller
         if (_mouseState == MouseStatus.OnDown)
         {

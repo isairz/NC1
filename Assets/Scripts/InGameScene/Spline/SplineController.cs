@@ -59,7 +59,7 @@ public class SplineController : MonoBehaviour
 			if (mCurrentIdx < Nodes.Length - 3)
 			{
 				mCurrentIdx++;
-                Debug.Log(mCurrentIdx);
+                //Debug.Log(mCurrentIdx);
 			}
 			else
 			{
