@@ -95,7 +95,7 @@ public class SplineController : MonoBehaviour
 
 	void NextStep() {
 		mCurrentIdx++;
-		//Debug.Log (mCurrentIdx);
+		Debug.Log (mCurrentIdx);
 
 		if (Nodes [mCurrentIdx].skyMat) {
 			SkyDome.sharedMaterial = Nodes [mCurrentIdx].skyMat;
