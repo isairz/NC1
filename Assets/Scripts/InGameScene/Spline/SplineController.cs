@@ -35,7 +35,7 @@ public class SplineController : MonoBehaviour
 
 	float mCurrentTime;
 	int mCurrentIdx = 1;
-	string mState = "";
+	public string mState = "";
 
 	void Awake()
 	{

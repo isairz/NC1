@@ -88,6 +88,6 @@ public class TitleSceneManager : MonoBehaviour{
     {
         // change Scene
         Debug.Log("Change Scene");
-        //Application.loadedLevel("game");
+        Application.LoadLevel(1);
     }
 }

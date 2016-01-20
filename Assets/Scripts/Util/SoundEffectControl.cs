@@ -6,6 +6,8 @@ public class SoundEffectControl : MonoBehaviour
 {
 
     private static SoundEffectControl instance;
+    //private static GameObject gameobject2;
+
     private AudioSource bg_audio;
     private AudioSource sfsx_audio;
     
@@ -18,9 +20,11 @@ public class SoundEffectControl : MonoBehaviour
             {
                 GameObject gameobject = new GameObject("SoundManager");
                 instance = gameobject.AddComponent<SoundEffectControl>();
-
+                //gameobject2 = new GameObject("SoundManager2");
+                //gameobject2.AddComponent<AudioSource>();
                 /* 모든 씬에서 사용하므로 파괴 불가로 설정 */
                 DontDestroyOnLoad(gameobject);
+                //DontDestroyOnLoad(gameobject2);
             }
             return instance;
         }
@@ -38,16 +42,18 @@ public class SoundEffectControl : MonoBehaviour
             bg_audio.Stop();
             bg_audio.clip = null;
         }
-        else 
-        {
-            bg_audio.clip = (AudioClip)Resources.Load("Sounds/" + soundName);
-            bg_audio.loop = true;
-            bg_audio.Play();
-        }
+        bg_audio.clip = (AudioClip)Resources.Load("Sounds/" + soundName);
+        bg_audio.loop = true;
+        bg_audio.Play();
     }
     /* 이펙트 출력 */
     public void PlayEffectSound(string soundName)
     {
+        sfsx_audio.PlayOneShot((AudioClip)Resources.Load("Sounds/" + soundName));
+    }
+    public void PlayEffectSound(string soundName, float soundVolume)
+    {
+        sfsx_audio.volume = soundVolume;
         sfsx_audio.PlayOneShot((AudioClip)Resources.Load("Sounds/" + soundName));
     }
     /* 사운드 볼륨 조절 */

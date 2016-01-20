@@ -41,6 +41,7 @@ public class ImageNumberControl : MonoBehaviour
         {
             if (index < string_value.Length)
             {
+                _canvasImageObject[index].GetComponent<RectTransform>().localRotation = Quaternion.identity;
                 _canvasImageObject[index].GetComponent<Image>().enabled = true;
                 _canvasImageObject[index].GetComponent<Image>().sprite = _nummberImage[int.Parse(string_value.Substring(index, 1))];
                 _canvasImageObject[index].GetComponent<Image>().SetNativeSize();
@@ -52,9 +53,8 @@ public class ImageNumberControl : MonoBehaviour
         }
     }
     private IEnumerator coroutine = null;
-    private int value = 0;
     public void SetValueTime(int num_value) {
-        if (num_value != 0 && value < num_value)
+        if (num_value != 0)
         {
             if (coroutine != null)
             {
@@ -63,10 +63,7 @@ public class ImageNumberControl : MonoBehaviour
             }
             coroutine = Animation(num_value, 1f);
             StartCoroutine(coroutine);
-            value = num_value;
         }
-        else
-            value = 0;
     }
     IEnumerator Animation(int num_value, float time) 
     {

@@ -92,6 +92,8 @@ public class ExplotionParticle : MonoBehaviour
                     ++_particleControllerScript.COMBO;
                     //getGAUAGE
                     _particleControllerScript.ChangeParticleEnergy(false, 0.1f);
+                    //SoundEffect
+                    SoundEffectControl.Instance.PlayEffectSound("BOIDS sound", 0.5f);
                 }
                 else
                 {
@@ -100,8 +102,13 @@ public class ExplotionParticle : MonoBehaviour
                     //notExplotion
                     // set COMBO
                     _particleControllerScript.COMBO = 0;
+                    // miss UI
+                    GameObject.FindGameObjectWithTag("GameController").GetComponent<InGameSceneManager>().StartMissUI();
                     //deleteParticle
                     other.GetComponentInParent<ParticleController>().DeleteParticle();
+                    //TODO
+                    //SoundEffect
+                    SoundEffectControl.Instance.PlayEffectSound("Slide Fail", 1.0f);
                 }
             }
         }
@@ -117,6 +124,7 @@ public class ExplotionParticle : MonoBehaviour
             ++_particleControllerScript.COMBO;
             //get GAUAGE
             _particleControllerScript.ChangeParticleEnergy(false, 0.1f);
+            SoundEffectControl.Instance.PlayEffectSound("Slide succes", 1.0f);
         }
     }
     void OnExplotion(Vector3 src_position)
